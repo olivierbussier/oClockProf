@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="reveal/dist/reveal.css">
+    <link rel="stylesheet" href="reveal/dist/theme/simple.css">
+    <link rel="stylesheet" href="reveal/plugin/highlight/monokai.css">
+    <script src="./reveal/dist/reveal.js"></script>
+    <script src="./reveal/plugin/notes/notes.js"></script>
+    <script src="./reveal/plugin/markdown/markdown.js"></script>
+    <script src="./reveal/plugin/highlight/highlight.js"></script>
+    <style>
+        .img-small-center {
+            height: 600px;
+        }
+    </style>
+</head>
+<body>
+    <div class="reveal">
+        <div class="slides">
+
+            <section>
+                <h2>Objectif du cours</h2><br>
+                <h3>Les bases de données relationelles</h3>
+                <h3>Leur accès via PHP et pdo</h3>
+            </section>
+
+            <section>
+                <h3>-- Fil d'ariane --</h3>
+                <ul>
+                    <li>Présentation</li>
+                    <li>Vérification des pré-requis</li>
+                    <li>Mise en place et test des environnements</li>
+                    <li>Intro aux bases de données relationelles</li>
+                    <li>Découverte SQL par l'exemple (via PSQL)</li>
+                    <li>Librairies PHP d'accès à PostGreSQL</li>
+                    <li>Focus sur PDO</li>
+                    <li>Cas pratiques avec php-PDO</li>
+                    <li>Quiz</li>
+                </ul>
+            </section>
+
+            <section>
+                <h3>Pré-requis</h3>
+                <aside class="notes">
+                    <ul>
+                        <li>psql opérationnel</li>
+                        <li>Savoir écrire du code php (variables, structures de contrôle, inclusions, composer)</li>
+                        <li>Connaitre les concepts POO (classes, atreributs méthodes, private, public, protected,
+                            classes statiques, méthodes statiques, instanciation)
+                        </li>
+                    </ul>
+                    <p>Et pour les exercices</p>
+                    <ul>
+                        <li>Environnement ubuntu avec php opérationnel, pdo installé</li>
+                        <li>postgres installé et running, utilisateur par défault postgres configuré</li>
+                    </ul>
+                </aside>
+            </section>
+
+            <section data-auto-animate>
+                <h3>Base de données relationelle</h3>
+                <h4>(le moteur)</h4>
+                <img src="./sgbd.png" style="height:300px">
+                <aside class="notes">
+                    <h3>Base de données relationelle</h3>
+                    <h4>SGBD</h4>
+                    <p>MySQL/MariaDB, PostGreSQL, Oracle, SQL Server</p>
+                    <ul>
+                        <li>Programme permettant de stocker des données (texte, valeurs, fichiers, ...)</li>
+                        <li>Etablir et conserver des relations entre les données</li>
+                        <li>On en fait tous avec un tableur (gsheet ou excel):  Une feuille,
+                            des lignes et des colonnes, et en général on aime bien avoir une ligne de titres pour s'y retrouver</li>
+                        <li>Dans le monde des SGBD, c'est pareil on crée des tables (la feuille) avec des nom de champs (la ligne de titres) et
+                            on remplis avec des lignes (les données)</li>
+                        <li>Très optimisé pour effectuer le travail de classement et de recherche sur les données et gérer les accès concurrents</li>
+                        <li>Permet également de garantir la cohérence des données</li>
+                        <li>Bases de données non relationelles (tel que MongoDB) que nous n'étudieront pas dans ce cours ().</li>
+                    </ul>
+
+                </aside>
+            </section>
+
+            <section data-auto-animate>
+                <h3>Base de données relationelle</h3>
+                <p>(Le langage SQL - Structured Query Language)</p>
+                <img src="./sgbd.png" style="height:250px">
+                <pre><code data-trim data-noescape class="language-SQL">
+                select * from 'table' where ann_publi = 1949
+                +-------+--------+-----------+------+
+                | titre | auteur | ann_publi | note |
+                +-------+--------+-----------+------+
+                | 1984  | Orwell | 1949      | 10   |
+                +-------+--------+-----------+------+
+                (1 row)
+                </code></pre>
+                <aside class="notes">
+                    <p>Moyen de communiquer avec le moteur de BD</p>
+                    <p>SQL permet de décrire des actions à executer par la database sous forme de langage "naturel"</p>
+                    <p>3 grandes catégories de requetes</p><ul>
+                        <li>Définition de données (Créer/modifier/supprimer des tables, Ajouter/supprimer des données)</li>
+                        <li>Controller les transactions de bout en bout afin de garantir la cohérence et l'intégrité des données</li>
+                        <li>Controller l'accès aux données (créer des utilisateurs, distribuer des droits d'accès aux tables et données)</li>
+                    </ul>
+                    <p>SQL existe commercialement depuis 1979, et est devenu une norme ANSI puis ISO à partir de 1986.
+                        C'est donc un langage très éprouvé</p>
+                    <p>Pour finir, c'est un standart incontournable pour un développeur web back-end/back-office</p>
+                </aside>
+            </section>
+
+            <section data-auto-animate>
+                <h3>Architecture</h3>
+                <img src="./cl-serv.png" class="img-small-center">
+                <aside class="notes">
+                    <p>Le serveur SQL communique avec le reste du monde via les mécanismes de socket Unix sur le port 5432</p>
+                    <p>Différentes applis peuvent se connecter (en même temps) a ce port et dialoguer avec le moteur</p>
+                    <p>Pour nos travaux pratiques, on utilisera psql qui est un outil en ligne de commande qui permet d'interagir
+                        interactivement avec un moteur protgress</p>
+                    <p>Mais plus tard, lorsque nous allons étudier l'accès via php/pdo, les commandes que l'on utilisera
+                        seront les mêmes que celles executées avec psql </p>
+                    <p>Il faut garder ce schéma en tête, psql est au même niveau que php en terme d'accès a la db</p>
+                </aside>
+            </section>
+
+            <section data-auto-animate>
+                <h3>Cas pratique</h3>
+                <h4>avec PostegresSQL et PSQL</h4>
+                <img src="./cl-serv.png" style="width:600px" alt="">
+                <aside class="notes">
+                    <p>On va concrétiser tout cela en allant jeter un oeil sur une base du monde réel
+                    J'ai ma VM Ubuntu, la même que vous à priori, j'ai installé postgres, php et pdo</p>
+                    <p>L'installation de postgress vient avec un utilitaire en ligne de commande nommé psql</p>
+                    <p>Souvenez-vous, cette appli communique avec le moteur sgbd comme le ferait php</p>
+                    <p>Nous allons donc utiliser cet utilitaire pour faire nos premiers pas dans le monde SQL</p>
+                </aside>
+            </section>
+
+            <section data-auto-animate>
+                <h3>Cas pratique</h3>
+                <h4>avec PostegresSQL et PSQL</h4>
+                <h5>Mise en place des outils</h5>
+                <p>En cas de pb, se référer au fichier "installation.md" sur github</a></p>
+                <aside class="notes">
+                </aside>
+            </section>
+
+            <section data-transition="zoom">
+                <h3>Librairies PHP d'accès à PostGreSQL</h3>
+                <ul>
+                    <li>driver postgresql</li>
+                    <ul>
+                        <li>Librairie spécifique (fonctions non transposables si changement de BD)</li>
+                        <li>Fonctionalités propres à chaque driver</li>
+                    </ul>
+                </ul>
+                <aside class="notes">
+                    <p></p>
+
+                </aside>
+            </section>
+
+            <section data-transition="zoom">
+                <h3>Librairies PHP d'accès à PostGreSQL</h3>
+                <ul>
+                    <li>pgsql via PDO (PHP Data Objects)</li>
+                    <ul>
+                        <li>interface abstraite et consistente pour les accès aux données (identique qqsoit la BD)</li>
+                        <li>Préparation des requetes et injection de variables</li>
+                        <li>Nécessite d'installer un driver PDO</li>
+                    </ul>
+                </ul>
+                <aside class="notes">
+                    <p></p>
+
+                </aside>
+            </section>
+
+            <section data-auto-animate>
+                <h3>Comparaison pg_postgres / PDO</h3>
+
+                <pre><code data-trim data-noescape class="language-php">
+                    $cnx = pg_connect("host=localhost port=5432 dbname=mary");
+                    $result = pg_query($cnx, "begin");
+                    $var1 = 150;
+                    $result = pg_query($cnx, "INSERT (champ1) values ($val1)");
+                    $data = pg_fetch_all($result);
+                    if ($data === null) {
+                        pg_query("rollback");
+                    } else {
+                        pg_query("commit");
+                    }
+                </code></pre>
+
+                <pre><code data-trim data-noescape class="language-php">
+                    $pdo = new PDO("postgres:dbname=testdb;host=127.0.0.1");
+                    try {
+                        $pdo->beginTransaction();
+                        $tr = $pdo->prepare('INSERT (champ1) values (:val1)');
+                        $tr->execute(['val1' => 150]);
+                        $data = $tr->fetchAll();
+                        $pdo->commit();
+                    } catch (PDOException $e) {
+                        $pdo->rollback();
+                    }
+                </code></pre>
+                <aside class="notes">
+                    <p>Un livre peut être modélise avec les attributs suivants:</p>
+                    <ul>
+                        <li>Un titre</li>
+                        <li>Un auteur</li>
+                        <li>Une année de parution</li>
+                        <li>Un nombre de pages</li>
+                        <li>une note et un nombre d'avis</li>
+                    </ul>
+                    <p>Les actions que nous pouvons imaginer pour cette classe Livre seraient:</p>
+                    <ul>
+                        <li>indiquer la page en cours de lecture</li>
+                        <li>récupérer la page en cours de lecture</li>
+                        <li>calculer et récupérer le pourcentage du livre déjà lu</li>
+                        <li>Mettre une note</li>
+                    </ul>
+                </aside>
+            </section>
+
+        </div>
+    </div>
+    <script>
+        Reveal.initialize({
+            hash: true,
+            plugins: [RevealNotes, RevealMarkdown, RevealHighlight]
+
+        })
+    </script>
+</body>
+</html>
